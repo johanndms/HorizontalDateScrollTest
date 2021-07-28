@@ -1,8 +1,10 @@
 package com.example.horizontaldatescrolltest
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -27,28 +29,31 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 
 class MainActivity : ComponentActivity() {
+	@RequiresApi(Build.VERSION_CODES.O)
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		setContent {
 			HorizontalDateScrollTestTheme {
 				// A surface container using the 'background' color from the theme
 				Surface(color = MaterialTheme.colors.background) {
-					MainScreen(dateList = dateList)
+					MainScreen()
 				}
 			}
 		}
 	}
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun MainScreen(dateVM: DateViewModel = DateViewModel(), dateList: List<DateList>) {
+fun MainScreen(dateVM: DateViewModel = DateViewModel()) {
 
 	val dayIndexState = dateVM.dayIndexState.observeAsState(0)
 
 	Column {
-		ShowSelectedDate(dateString = dateList[dayIndexState.value].dateString)
-		ShowDateScroll(
-			dateIndex = dayIndexState.value, dateVM = dateVM)
+		ShowSelectedDate(dateString = dateVM.dateList[dayIndexState.value].dateD11)
+		ShowDateScroll(dateIndex = dayIndexState.value, dateList = dateVM.dateList) {
+			newDateIndex -> dateVM.onSelectDay(newDayIndex = newDateIndex)
+		}
 	}
 }
 
@@ -69,29 +74,29 @@ fun ShowSelectedDate(dateString: String) {
 @Composable
 fun ShowDateScroll(
 	dateIndex: Int,
-	dateVM: DateViewModel
+	dateList:  ArrayList<DateViewModel.DateList>,
+	dateIndexUpdate: (newIndexState: Int) -> Unit
 ) {
 	LazyRow(
 		modifier = Modifier
-			.fillMaxWidth()
-			.background(Color.LightGray),
+			.fillMaxWidth(),
 		horizontalArrangement = Arrangement.spacedBy(25.dp)
 	) {
 		items(items = dateList, itemContent = { dateItem ->
 			Column(
-				horizontalAlignment = Alignment.CenterHorizontally
+				horizontalAlignment = Alignment.CenterHorizontally,
+				modifier = Modifier
+					.clickable(
+						role = Role.Button
+					) {
+						dateIndexUpdate(dateItem.dayKey)
+					}
 			) {
 				Text(
-					text = dateItem.dow,
-					modifier = Modifier
-						.clickable(
-							role = Role.Button
-						) {
-							dateVM.onSelectDay(dateItem.dayKey)
-						}
+					text = dateItem.dayOfWeek
 				)
 				Text(
-					text = dateItem.day.toString(),
+					text = dateItem.theDay,
 				)
 			}
 		})
@@ -99,10 +104,11 @@ fun ShowDateScroll(
 }
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
 	HorizontalDateScrollTestTheme {
-		MainScreen(dateList = dateList)
+		MainScreen()
 	}
 }
